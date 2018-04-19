@@ -7,6 +7,7 @@ HMSegmentedControl
 [![Pod License](http://img.shields.io/cocoapods/l/HMSegmentedControl.svg?style=flat)](http://opensource.org/licenses/MIT)
 
 A drop-in replacement for UISegmentedControl mimicking the style of the segmented control used in Google Currents and various other Google products.
+支持指示器跟随ScrollView滑动
 
 # Features
 - 指示器跟随ScrollView滑动
@@ -16,21 +17,6 @@ A drop-in replacement for UISegmentedControl mimicking the style of the segmente
 - Supports selection indicator both on top and bottom
 - Supports blocks
 - Works with ARC and iOS >= 7
-
-# Installation
-
-### CocoaPods
-The easiest way of installing HMSegmentedControl is via [CocoaPods](http://cocoapods.org/). 
-
-```
-pod 'HMSegmentedControl'
-```
-
-### Old-fashioned way
-
-- Add `HMSegmentedControl.h` and `HMSegmentedControl.m` to your project.
-- Add `QuartzCore.framework` to your linked frameworks.
-- `#import "HMSegmentedControl.h"` where you want to add the control.
 
 # Usage
 
