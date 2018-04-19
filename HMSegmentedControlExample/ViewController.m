@@ -123,6 +123,7 @@
     self.scrollView.delegate = self;
     [self.scrollView scrollRectToVisible:CGRectMake(viewWidth, 0, viewWidth, 200) animated:NO];
     [self.view addSubview:self.scrollView];
+    [self.segmentedControl4 setPageScrollView:self.scrollView];
     
     UILabel *label1 = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, viewWidth, 210)];
     [self setApperanceForLabel:label1];

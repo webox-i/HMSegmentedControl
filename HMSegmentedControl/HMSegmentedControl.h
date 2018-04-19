@@ -259,4 +259,9 @@ typedef NS_ENUM(NSInteger, HMSegmentedControlImagePosition) {
 - (void)setIndexChangeBlock:(IndexChangeBlock)indexChangeBlock;
 - (void)setTitleFormatter:(HMTitleFormatterBlock)titleFormatter;
 
+/**
+ Add animations for scrolling
+ */
+- (void)setPageScrollView:(UIScrollView *)scrollView;
+
 @end

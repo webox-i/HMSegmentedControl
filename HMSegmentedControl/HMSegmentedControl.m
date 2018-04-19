@@ -21,6 +21,7 @@
 @property (nonatomic, readwrite) CGFloat segmentWidth;
 @property (nonatomic, readwrite) NSArray<NSNumber *> *segmentWidthsArray;
 @property (nonatomic, strong) HMScrollView *scrollView;
+@property (nonatomic, strong) UIScrollView *pageScrollView;
 
 @end
 
@@ -579,6 +580,14 @@
 }
 
 - (CGRect)frameForSelectionIndicator {
+    return [self frameForSelectionIndicatorWithIndex:self.selectedSegmentIndex];
+}
+
+- (CGRect)frameForSelectionIndicatorWithIndex:(NSInteger)index {
+    if (index >= self.sectionTitles.count || index < 0) {
+        index = self.selectedSegmentIndex;
+    }
+    
     CGFloat indicatorYOffset = 0.0f;
     
     if (self.selectionIndicatorLocation == HMSegmentedControlSelectionIndicatorLocationDown) {
@@ -592,22 +601,22 @@
     CGFloat sectionWidth = 0.0f;
     
     if (self.type == HMSegmentedControlTypeText) {
-        CGFloat stringWidth = [self measureTitleAtIndex:self.selectedSegmentIndex].width;
+        CGFloat stringWidth = [self measureTitleAtIndex:index].width;
         sectionWidth = stringWidth;
     } else if (self.type == HMSegmentedControlTypeImages) {
-        UIImage *sectionImage = [self.sectionImages objectAtIndex:self.selectedSegmentIndex];
+        UIImage *sectionImage = [self.sectionImages objectAtIndex:index];
         CGFloat imageWidth = sectionImage.size.width;
         sectionWidth = imageWidth;
     } else if (self.type == HMSegmentedControlTypeTextImages) {
-		CGFloat stringWidth = [self measureTitleAtIndex:self.selectedSegmentIndex].width;
-		UIImage *sectionImage = [self.sectionImages objectAtIndex:self.selectedSegmentIndex];
+		CGFloat stringWidth = [self measureTitleAtIndex:index].width;
+		UIImage *sectionImage = [self.sectionImages objectAtIndex:index];
 		CGFloat imageWidth = sectionImage.size.width;
         sectionWidth = MAX(stringWidth, imageWidth);
 	}
     
     if (self.selectionStyle == HMSegmentedControlSelectionStyleArrow) {
-        CGFloat widthToEndOfSelectedSegment = (self.segmentWidth * self.selectedSegmentIndex) + self.segmentWidth;
-        CGFloat widthToStartOfSelectedIndex = (self.segmentWidth * self.selectedSegmentIndex);
+        CGFloat widthToEndOfSelectedSegment = (self.segmentWidth * index) + self.segmentWidth;
+        CGFloat widthToStartOfSelectedIndex = (self.segmentWidth * index);
         
         CGFloat x = widthToStartOfSelectedIndex + ((widthToEndOfSelectedSegment - widthToStartOfSelectedIndex) / 2) - (self.selectionIndicatorHeight/2);
         return CGRectMake(x - (self.selectionIndicatorHeight / 2), indicatorYOffset, self.selectionIndicatorHeight * 2, self.selectionIndicatorHeight);
@@ -615,8 +624,8 @@
         if (self.selectionStyle == HMSegmentedControlSelectionStyleTextWidthStripe &&
             sectionWidth <= self.segmentWidth &&
             self.segmentWidthStyle != HMSegmentedControlSegmentWidthStyleDynamic) {
-            CGFloat widthToEndOfSelectedSegment = (self.segmentWidth * self.selectedSegmentIndex) + self.segmentWidth;
-            CGFloat widthToStartOfSelectedIndex = (self.segmentWidth * self.selectedSegmentIndex);
+            CGFloat widthToEndOfSelectedSegment = (self.segmentWidth * index) + self.segmentWidth;
+            CGFloat widthToStartOfSelectedIndex = (self.segmentWidth * index);
             
             CGFloat x = ((widthToEndOfSelectedSegment - widthToStartOfSelectedIndex) / 2) + (widthToStartOfSelectedIndex - sectionWidth / 2);
             return CGRectMake(x + self.selectionIndicatorEdgeInsets.left, indicatorYOffset, sectionWidth - self.selectionIndicatorEdgeInsets.right, self.selectionIndicatorHeight);
@@ -626,15 +635,15 @@
                 
                 NSInteger i = 0;
                 for (NSNumber *width in self.segmentWidthsArray) {
-                    if (self.selectedSegmentIndex == i)
+                    if (index == i)
                         break;
                     selectedSegmentOffset = selectedSegmentOffset + [width floatValue];
                     i++;
                 }
-                return CGRectMake(selectedSegmentOffset + self.selectionIndicatorEdgeInsets.left, indicatorYOffset, [[self.segmentWidthsArray objectAtIndex:self.selectedSegmentIndex] floatValue] - self.selectionIndicatorEdgeInsets.right, self.selectionIndicatorHeight + self.selectionIndicatorEdgeInsets.bottom);
+                return CGRectMake(selectedSegmentOffset + self.selectionIndicatorEdgeInsets.left, indicatorYOffset, [[self.segmentWidthsArray objectAtIndex:index] floatValue] - self.selectionIndicatorEdgeInsets.right, self.selectionIndicatorHeight + self.selectionIndicatorEdgeInsets.bottom);
             }
             
-            return CGRectMake((self.segmentWidth + self.selectionIndicatorEdgeInsets.left) * self.selectedSegmentIndex, indicatorYOffset, self.segmentWidth - self.selectionIndicatorEdgeInsets.right, self.selectionIndicatorHeight);
+            return CGRectMake((self.segmentWidth + self.selectionIndicatorEdgeInsets.left) * index, indicatorYOffset, self.segmentWidth - self.selectionIndicatorEdgeInsets.right, self.selectionIndicatorHeight);
         }
     }
 }
@@ -953,6 +962,52 @@
     }
     
     return [resultingAttrs copy];
+}
+
+
+#pragma mark - Scrolling
+
+- (void)setPageScrollView:(UIScrollView *)scrollView {
+    _pageScrollView = scrollView;
+    [_pageScrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:nil];
+}
+
+- (void)dealloc {
+    [_pageScrollView removeObserver:self forKeyPath:@"contentOffset"];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    if (object == _pageScrollView && [keyPath isEqualToString:@"contentOffset"]) {
+        [self pageScrollViewContentOffset:_pageScrollView];
+    }
+}
+
+- (void)pageScrollViewContentOffset:(UIScrollView *)scrollView {
+    CGFloat pageWidth = CGRectGetWidth(scrollView.bounds);
+    CGFloat originX = pageWidth * self.selectedSegmentIndex;
+    CGRect originFrame = [self frameForSelectionIndicatorWithIndex:self.selectedSegmentIndex];
+    
+    NSInteger nextIndex;
+    CGFloat moveRate;
+    if (scrollView.contentOffset.x >= originX) {
+        moveRate = (scrollView.contentOffset.x - originX) / pageWidth;
+        nextIndex = self.selectedSegmentIndex + 1;
+    } else {
+        moveRate = (originX - scrollView.contentOffset.x) / pageWidth;
+        nextIndex = self.selectedSegmentIndex - 1;
+    }
+    
+    CGRect nextFrame = [self frameForSelectionIndicatorWithIndex:nextIndex];
+    CGFloat xOffset = (nextFrame.origin.x - originFrame.origin.x) * moveRate;
+    CGFloat widthOffset = (nextFrame.size.width - originFrame.size.width) * moveRate;
+    [self updateSelectionIndicatorFrame:CGRectMake(originFrame.origin.x + xOffset, nextFrame.origin.y, originFrame.size.width + widthOffset, nextFrame.size.height)];
+}
+
+- (void)updateSelectionIndicatorFrame:(CGRect)frame {
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
+    self.selectionIndicatorStripLayer.frame = frame;
+    [CATransaction commit];
 }
 
 @end
