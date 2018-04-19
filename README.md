@@ -9,6 +9,7 @@ HMSegmentedControl
 A drop-in replacement for UISegmentedControl mimicking the style of the segmented control used in Google Currents and various other Google products.
 
 # Features
+- 指示器跟随ScrollView滑动
 - Supports both text and images
 - Support horizontal scrolling
 - Supports advanced title styling with text attributes for font, color, kerning, shadow, etc.
@@ -40,6 +41,7 @@ HMSegmentedControl *segmentedControl = [[HMSegmentedControl alloc] initWithSecti
 segmentedControl.frame = CGRectMake(10, 10, 300, 60);
 [segmentedControl addTarget:self action:@selector(segmentedControlChangedValue:) forControlEvents:UIControlEventValueChanged];
 [self.view addSubview:segmentedControl];
+[segmentedControl setPageScrollView:scrollView];
 ```
 
 Included is a demo project showing how to fully customise the control.
