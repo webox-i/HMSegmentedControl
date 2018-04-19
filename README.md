@@ -41,12 +41,14 @@ HMSegmentedControl *segmentedControl = [[HMSegmentedControl alloc] initWithSecti
 segmentedControl.frame = CGRectMake(10, 10, 300, 60);
 [segmentedControl addTarget:self action:@selector(segmentedControlChangedValue:) forControlEvents:UIControlEventValueChanged];
 [self.view addSubview:segmentedControl];
+
+// 需要设置滚动页面的ScrollView，指示器才能同步滑动
 [segmentedControl setPageScrollView:scrollView];
 ```
 
 Included is a demo project showing how to fully customise the control.
 
-![HMSegmentedControl](https://raw.githubusercontent.com/HeshamMegid/HMSegmentedControl/master/Screenshot.png)
+![HMSegmentedControl](https://raw.githubusercontent.com/webox-i/HMSegmentedControl/master/demo.gif)
 
 # Apps using HMSegmentedControl
 
